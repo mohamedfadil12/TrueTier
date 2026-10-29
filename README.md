@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/img/banner.svg" alt="TrueTier banner: three suppliers, one fab, one port" width="100%"/>
+<img src="banner.svg" alt="TrueTier banner: three suppliers, one fab, one port" width="100%"/>
 
 <br/>
 
