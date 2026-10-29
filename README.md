@@ -1,16 +1,31 @@
 <div align="center">
 
-# TrueTier
+<img src="docs/img/banner.svg" alt="TrueTier banner: three suppliers, one fab, one port" width="100%"/>
 
-### Independence isn't how many suppliers you have. It's how many don't share a failure.
+<br/>
 
-Supplier-dependency intelligence for **METAVERSE 2.0** · Challenge #10: *The Supplier Illusion*
+![Category](https://img.shields.io/badge/Category-Supply%20Chain%20Management-2DD4BF?style=for-the-badge)
+![Hackathon](https://img.shields.io/badge/METAVERSE-2.0-F5B942?style=for-the-badge)
+![Challenge](https://img.shields.io/badge/Challenge-%2310%20The%20Supplier%20Illusion-A78BFA?style=for-the-badge)
 
-**Team Kelambakkam Atti** · Category: Software
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Cytoscape](https://img.shields.io/badge/Cytoscape.js-graph-F7DF1E)
+![Offline](https://img.shields.io/badge/Works-offline-success)
+
+**Team Kelambakkam Atti**
 
 [Live landing page](https://true-tier.vercel.app) · [Plan](plan.md) · [Agent instructions](instructions.md)
 
 </div>
+
+---
+
+## Table of contents
+
+[The problem](#the-problem) · [What TrueTier does](#what-truetier-does) · [The illusion, visualised](#the-illusion-visualised) · [Confidence Lens](#the-demo-moment-confidence-lens) · [Key features](#key-features) · [Metrics](#the-metrics) · [Architecture](#architecture) · [How a request flows](#how-a-request-flows) · [Roadmap](#roadmap) · [Quick start](#quick-start-windows--powershell) · [API](#api) · [Team](#team-kelambakkam-atti)
 
 ---
 
@@ -26,7 +41,48 @@ TrueTier builds a **multi-tier supplier network** from procurement records, supp
 2. **What happens to inventory and production if something breaks?** (day-by-day simulation, Monte Carlo P50/P90)
 3. **What should I fix first?** (actions ranked by ROI, with the evidence behind each)
 
-Every link in the graph is tagged **verified**, **reported** or **inferred**, and the proof is one click away. The distinction is the product.
+Every link is tagged **verified**, **reported** or **inferred**, and the proof is one click away. The distinction is the product.
+
+## The illusion, visualised
+
+What procurement sees when only verified links are trusted, versus what the full evidence shows:
+
+```mermaid
+flowchart LR
+  subgraph V["Verified lens: looks diversified (EIC ≈ 3.0)"]
+    direction LR
+    N1["Nexa Semi"] --> A1(["Aurora Motors"])
+    O1["Orion Micro"] --> A1
+    H1["Helix Devices"] --> A1
+  end
+
+  subgraph F["All-links lens: the illusion (EIC ≈ 1.1)"]
+    direction LR
+    N2["Nexa Semi"] -->|verified| W["Hsinchu Wafer Works"]
+    O2["Orion Micro"] -.->|reported| W
+    H2["Helix Devices"] -.->|"inferred ?"| W
+    W ==> P{{"Port of Kaohsiung"}}
+    P ==> A2(["Aurora Motors"])
+  end
+
+  classDef risk fill:#3A1418,stroke:#FF4D4D,stroke-width:3px,color:#fff;
+  classDef buyer fill:#10151C,stroke:#E8ECF1,color:#fff;
+  class W,P risk;
+  class A1,A2 buyer;
+```
+
+Nominal vs effective supplier count per material (dataset design targets, **All** lens):
+
+```mermaid
+xychart-beta
+    title "Nominal vs effective independent suppliers"
+    x-axis ["Power MCU", "Li-ion cells", "Magnets", "Copper (control)"]
+    y-axis "Suppliers" 0 --> 4
+    bar [3, 2, 2, 3]
+    bar [1.1, 1.3, 1.2, 3]
+```
+
+Copper is the **control**: three genuinely separate chains, so the tool correctly says "diversified" and doesn't cry wolf.
 
 ## The demo moment: Confidence Lens
 
@@ -35,7 +91,15 @@ Every link in the graph is tagged **verified**, **reported** or **inferred**, an
 | **Verified only** | Three independent chip suppliers | EIC ≈ 3.0 |
 | **+ Reported + Inferred** | All three funnel into one wafer fab and one port | EIC ≈ 1.1 |
 
-Then close **Port of Kaohsiung** and watch the red wave propagate: MCU inventory hits zero and production halts around **day 9**. Copper, the control material with genuinely separate chains, stays healthy, so the tool doesn't cry wolf.
+Then close **Port of Kaohsiung** and watch the red wave propagate: MCU inventory hits zero and production halts around **day 9**.
+
+| Edge class | Line style | Colour |
+|---|---|---|
+| Verified | solid | teal |
+| Reported | dashed | amber |
+| Inferred | dotted + "?" | violet |
+
+Styles differ by pattern as well as colour, so the graph stays readable in grayscale and on a projector.
 
 <!-- Add screenshots to docs/img/ and uncomment:
 ![Confidence Lens](docs/img/lens.png)
@@ -45,32 +109,87 @@ Then close **Port of Kaohsiung** and watch the red wave propagate: MCU inventory
 
 ## Key features
 
-- **Confidence Lens** to switch between verified, +reported and all links; the graph and hero metric animate.
+- **Confidence Lens**: switch between verified, +reported and all links; graph and hero metric animate.
 - **EIC / FDS scoring** per critical material (Effective Independence Count, False Diversification Score).
 - **Evidence panel** with contracts, disclosures, shipment records and geo-proximity behind every edge.
-- **Disruption simulation** with four presets (typhoon, fab shutdown, rare-earth ban, compound shock) and custom node disruption.
+- **Disruption simulation**: four presets (typhoon, fab shutdown, rare-earth ban, compound shock) plus custom node disruption.
 - **Monte Carlo** that models uncertainty in our own knowledge of the network.
 - **ROI-ranked recommendations** (add supplier, buffer stock) with FDS before → after.
 - **Printable report** via Jinja2 and browser print-to-PDF.
-- **Offline-first.** The optional Claude API writes prose only; deterministic templates take over without internet.
+- **Offline-first**: the optional Claude API writes prose only; deterministic templates take over without internet.
 
 ## The metrics
 
 ```
-EIC(m) = min(nominal, 1 / max_exposure(m))      # how many suppliers are effectively independent
-FDS(m) = 1 - EIC(m) / nominal(m)                # 0 = diversified, → 1 = pure illusion
+EIC(m)         = min(nominal, 1 / max_exposure(m))   # suppliers that are effectively independent
+FDS(m)         = 1 - EIC(m) / nominal(m)             # 0 = diversified, → 1 = pure illusion
 exposure(u, m) = 1 - availability(m | node u fails)
 ```
 
-Verdicts: `diversified` (FDS < 0.2) · `partial` (< 0.5) · `illusion` (≥ 0.5). Full formulas are in [plan.md §7](plan.md).
+```mermaid
+flowchart LR
+  A["FDS &lt; 0.2"] --> B["diversified"]
+  C["0.2 ≤ FDS &lt; 0.5"] --> D["partial"]
+  E["FDS ≥ 0.5"] --> F["illusion"]
+  style B fill:#12303A,stroke:#2DD4BF,color:#fff
+  style D fill:#3A2E12,stroke:#F5B942,color:#fff
+  style F fill:#3A1418,stroke:#FF4D4D,color:#fff
+```
+
+Full formulas are in [plan.md §7](plan.md).
 
 ## Architecture
 
-```
-DATA (seeded JSON/CSV)  →  ENGINE (NetworkX + NumPy)  →  API (FastAPI)  →  FRONTEND (React + Cytoscape)
-graph, materials,          lens, exposure, EIC/FDS,       /graph /analysis   Lens slider, graph canvas,
-scenarios, candidates,     simulate, Monte Carlo,         /simulate          evidence panel, charts,
-shipments, disclosures     recommend, inference           /recommend /report reco table
+```mermaid
+flowchart LR
+  subgraph DATA["Data (seeded, synthetic)"]
+    D1[("graph.json")]
+    D2[("materials.json")]
+    D3[("scenarios.json")]
+    D4[("candidates.json")]
+    D5[("shipments.csv")]
+    D6[("disclosures.json")]
+  end
+
+  subgraph ENGINE["Engine (NetworkX + NumPy)"]
+    E1["Lens"]
+    E2["Exposure"]
+    E3["EIC / FDS"]
+    E4["Simulation"]
+    E5["Monte Carlo"]
+    E6["Recommend"]
+    E7["Inference"]
+  end
+
+  subgraph API["API (FastAPI)"]
+    A1["/graph"]
+    A2["/analysis"]
+    A3["/simulate"]
+    A4["/recommend"]
+    A5["/report"]
+  end
+
+  subgraph UI["Frontend (React + TS)"]
+    U1["Lens slider"]
+    U2["Graph canvas"]
+    U3["Evidence panel"]
+    U4["Charts"]
+    U5["Reco table"]
+  end
+
+  LLM["Claude API<br/>(optional, prose only)"]
+
+  DATA --> E1 --> E2 --> E3
+  E3 --> E4 --> E5
+  E4 --> E6
+  D5 --> E7
+  D6 --> E7
+  E7 -->|inferred edges| D1
+  ENGINE --> API --> UI
+  API -.->|narrative| LLM
+
+  classDef opt stroke-dasharray: 5 5;
+  class LLM opt;
 ```
 
 Single process, in-memory, no database, deterministic (`seed=42`).
@@ -81,6 +200,71 @@ Single process, in-memory, no database, deterministic (`seed=42`).
 | Backend | Python 3.11, FastAPI, Pydantic v2, NetworkX, NumPy, pandas, rapidfuzz |
 | Report | Jinja2 + print CSS |
 | Optional AI | Anthropic Claude API for narrative text only (never for numbers or rankings) |
+
+## How a request flows
+
+```mermaid
+sequenceDiagram
+  actor P as Procurement lead
+  participant UI as React UI
+  participant API as FastAPI
+  participant EN as Engine
+
+  P->>UI: Slide lens to "All"
+  UI->>API: GET /graph and /analysis?lens=all
+  API->>EN: apply_lens, analyze
+  EN-->>API: edges, EIC, FDS, shared nodes
+  API-->>UI: JSON
+  UI-->>P: Graph reveals shared fab and port, FDS animates
+
+  P->>UI: Click "Kaohsiung typhoon"
+  UI->>API: POST /simulate
+  API->>EN: simulate (+ Monte Carlo)
+  EN-->>API: inventory, production, loss, P50/P90
+  API-->>UI: series + narrative
+  UI-->>P: Red wave, stockout on day 9
+
+  P->>UI: Open recommendations
+  UI->>API: POST /recommend
+  API->>EN: recompute FDS and loss per action
+  EN-->>API: actions ranked by ROI
+  API-->>UI: before to after FDS, ROI
+```
+
+## Roadmap
+
+### 24-hour build plan
+
+```mermaid
+gantt
+  title METAVERSE 2.0 build timeline (hours from kickoff)
+  dateFormat HH:mm
+  axisFormat T+%H
+  section Foundation
+  Scaffold, contracts frozen          :done, f1, 00:00, 1h
+  section P0 vertical slice
+  Dataset + engine v1 + lens          :p1, 01:00, 7h
+  Simulation, charts, evidence panel  :p2, 08:00, 4h
+  P0 demo path end-to-end             :milestone, m1, 12:00, 0h
+  section P1
+  Monte Carlo, recommendations, report:q1, 14:00, 4h
+  section Polish and ship
+  Visual polish                       :s1, 18:00, 2h
+  Feature freeze                      :crit, milestone, m2, 20:00, 0h
+  Bug bash, backup video, README      :s2, 20:00, 2h
+  Rehearse 3x and submit              :s3, 22:00, 2h
+```
+
+### After the hackathon
+
+```mermaid
+timeline
+  title Product roadmap
+  Hackathon demo : Confidence Lens : EIC and FDS : Disruption simulation : ROI-ranked fixes
+  Next : CSV and ERP import : Scenario comparison : Map view with geo lines
+  Later : Live shipment and port feeds : Automated disclosure reading : Min-cut and SPOF view
+  Vision : Continuous monitoring : Supplier onboarding workflow : Board-ready risk reports
+```
 
 ## Quick start (Windows / PowerShell)
 
@@ -122,7 +306,7 @@ data/        generated seeded dataset (committed so the demo runs instantly)
 scripts/     generate_data.py
 backend/     FastAPI app, engine/, golden tests
 frontend/    React app
-docs/        STATUS.md handoff log, pitch.md
+docs/        STATUS.md handoff log, pitch.md, img/
 ```
 
 ## About the data
@@ -131,12 +315,12 @@ The demo uses a **fictional, synthetic, seeded** scenario: *Aurora Motors*, an E
 
 ## Team: Kelambakkam Atti
 
-| Member | Role | GitHub |
-|---|---|---|
-| **Ammar** | Engine lead: exposure, EIC/FDS, simulation, Monte Carlo | [@mdammar56](https://github.com/mdammar56) |
-| **Fahadur** | Data & API: dataset generator, FastAPI, report | [@fahadur20git](https://github.com/fahadur20git) |
-| **Rayyan** | Frontend lead: graph canvas, lens, charts, evidence panel | [@rayyanbasheer](https://github.com/rayyanbasheer) |
-| **Fadil** | Design, pitch & QA: visual language, deck, demo rehearsal | [@mohamedfadil12](https://github.com/mohamedfadil12) |
+| | Member | Role | GitHub |
+|---|---|---|---|
+| <img src="https://github.com/mdammar56.png" width="48" height="48" alt="Ammar"/> | **Ammar** | Engine lead: exposure, EIC/FDS, simulation, Monte Carlo | [@mdammar56](https://github.com/mdammar56) |
+| <img src="https://github.com/fahadur20git.png" width="48" height="48" alt="Fahadur"/> | **Fahadur** | Data & API: dataset generator, FastAPI, report | [@fahadur20git](https://github.com/fahadur20git) |
+| <img src="https://github.com/rayyanbasheer.png" width="48" height="48" alt="Rayyan"/> | **Rayyan** | Frontend lead: graph canvas, lens, charts, evidence panel | [@rayyanbasheer](https://github.com/rayyanbasheer) |
+| <img src="https://github.com/mohamedfadil12.png" width="48" height="48" alt="Fadil"/> | **Fadil** | Design, pitch & QA: visual language, deck, demo rehearsal | [@mohamedfadil12](https://github.com/mohamedfadil12) |
 
 ## References
 
