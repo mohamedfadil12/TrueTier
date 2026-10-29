@@ -1,1 +1,1 @@
-export { default } from './app/App.tsx';
+export { default } from './app/SaaSApp.tsx';
