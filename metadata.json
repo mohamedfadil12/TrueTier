@@ -1,0 +1,6 @@
+{
+  "name": "TrueTier — Supplier Independence Intelligence",
+  "description": "See the source behind your suppliers. TrueTier maps multi-tier supplier relationships to uncover hidden chokepoints and single points of failure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
